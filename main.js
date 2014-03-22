@@ -268,7 +268,7 @@ function LoadLib()
 	include_css( config["jenginePath"] + "css/console.css");
 	include_css( config["jenginePath"] + "css/renderer.css");
 	
-	include_js( config["srcPath"] + "resource.js");
+	//include_js( config["srcPath"] + "resource.js");
 	$(document).bind("touchstart mousedown", mouseDown);
 	$(document).bind("touchmove mousemove", mouseMove);
 	$(document).bind("touchend mouseup", mouseUp);
@@ -419,7 +419,7 @@ function LoadLib()
 function jengineStart()
 {
 	getArgument();
-	include_js("config.js");
+	//include_js("config.js");
 	AllowZoom(false)
 	
 	waitIncludeComplete(  function() {
