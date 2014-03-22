@@ -49,7 +49,18 @@ var Renderer = function(width, height, scale)
 	{
 		this.context.fillText(msg, x, y);
 	}
+
+	this.GetTextWidth = function(text)
+	{
+		var metrics = this.context.measureText(text);
+		return metrics.width;
+	}
 	
+	this.GetFontSize = function()
+	{
+		return parseInt(this.canvas.css('font-size'));
+	}
+
 	this.WrapText = function (x, y, maxWidth, lineHeight, text)
 	{
 		var words = text.split(" ");
@@ -144,6 +155,30 @@ var Renderer = function(width, height, scale)
 		this.context.restore()
  	}	
 	
+
+	this.RoundRect = function(x, y, width, height, radius, fill, stroke) 
+	{
+//http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+		if (typeof stroke == "undefined" ) stroke = false; 
+		if (typeof radius === "undefined") radius = 5;
+		if (typeof fill === "undefined") fill = 5;
+
+		this.context.beginPath();
+		this.context.moveTo(x + radius, y);
+		this.context.lineTo(x + width - radius, y);
+		this.context.quadraticCurveTo(x + width, y, x + width, y + radius);
+		this.context.lineTo(x + width, y + height - radius);
+		this.context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+		this.context.lineTo(x + radius, y + height);
+		this.context.quadraticCurveTo(x, y + height, x, y + height - radius);
+		this.context.lineTo(x, y + radius);
+		this.context.quadraticCurveTo(x, y, x + radius, y);
+		this.context.closePath();
+
+		if (stroke)  this.context.stroke();
+		if (fill) this.context.fill();
+	}
+
 	this.Rect = function(x, y, w, h)
 	{
 		this.context.fillRect(x,y,w,h);
