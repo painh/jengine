@@ -199,6 +199,13 @@ var Renderer = function(width, height, scale)
 		this.context.stroke();		
 	}
 
+	this.Circle = function(cx, cy, r)
+	{
+		this.context.beginPath();
+		this.context.arc(cx, cy, r, 0, Math.PI*2, true); 
+		this.context.closePath();
+		this.context.fill();
+	}
 	this.SetColor = function( color )
 	{
 		this.context.fillStyle = color;

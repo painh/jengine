@@ -31,8 +31,20 @@ function AllowZoom(flag) {
 
 function randomRange(n1, n2)
 {
-	return Math.floor( (Math.random() * (n2 - n1 + 1)) + n1 );
+	return Math.floor( (Math.random() * (parseInt(n2) - parseInt(n1) + 1)) + parseInt(n1) );
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function removeFromList(list, obj)
+{
+	var idx = list.indexOf(obj);
+	list.splice(idx, 1); 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var Console = function( width, height)
 {
