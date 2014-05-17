@@ -16,6 +16,12 @@ var lastIncluded = undefined;
 var g_cachedTime = new Date();
 var totalFPS = 0;
 
+var KEY_UP = 38;
+var KEY_DOWN = 40;
+var KEY_LEFT = 37;
+var KEY_RIGHT = 39;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //http://stackoverflow.com/questions/2750028/enable-disable-zoom-on-iphone-safari-with-javascript
 function AllowZoom(flag) {
@@ -128,6 +134,8 @@ var KeyManager = function()
 	{
 		if(keyCode >= 255)
 			return;
+
+		console.log(keyCode);
 			
 		this.keyMap[keyCode] = false;
 	}
