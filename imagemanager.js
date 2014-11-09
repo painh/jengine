@@ -12,7 +12,7 @@ var ImageManager = function()
 		trace(image.src + " load complete");
 	}
 
-	this.Register = function( URL, imageName )
+	this.Register = function( URL, imageName, forceLoad )
 	{
 //		trace(URL);
 //		trace(imageName);
@@ -33,7 +33,10 @@ var ImageManager = function()
 		newImage.onerror = function() { trace("error : load " + URL + " failed") } ;
 		newImage.imageName = imageName;
 		newImage.isLoaded = false;
-		newImage.src = URL;
+		if(forceLoad)
+			newImage.src = URL + "?t="+(new Date()).getTime();
+		else
+			newImage.src = URL;
 
 	//	trace(newImage.imageName);
 		return newImage;

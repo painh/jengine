@@ -21,6 +21,155 @@ var KEY_DOWN = 40;
 var KEY_LEFT = 37;
 var KEY_RIGHT = 39;
 
+var g_now;
+
+var touchDevice = false;
+
+function swipedetect(el, callback){
+//http://www.javascriptkit.com/javatutors/touchevents2.shtml 
+	var touchsurface = el, swipedir, startX, startY, distX, distY, threshold = 75, //required min distance traveled to be considered swipe
+						restraint = 50, // maximum distance allowed at the same time in perpendicular direction
+						allowedTime = 300, // maximum time allowed to travel that distance
+						elapsedTime,
+						startTime,
+						handleswipe = callback || function(swipedir){}
+
+	touchsurface.addEventListener('touchstart', function(e){
+		var touchobj = e.changedTouches[0]
+		swipedir = 'none'
+		dist = 0
+		startX = touchobj.pageX
+		startY = touchobj.pageY
+		startTime = new Date().getTime() // record time when finger first makes contact with surface
+		e.preventDefault() 
+	}, false)
+
+	touchsurface.addEventListener('touchmove', function(e){
+		e.preventDefault() // prevent scrolling when inside DIV
+	}, false)
+
+	touchsurface.addEventListener('touchend', function(e){
+		var touchobj = e.changedTouches[0]
+		distX = touchobj.pageX - startX // get horizontal dist traveled by finger while in contact with surface
+		distY = touchobj.pageY - startY // get vertical dist traveled by finger while in contact with surface
+		elapsedTime = new Date().getTime() - startTime // get time elapsed
+		if (elapsedTime <= allowedTime){ // first condition for awipe met
+		if (Math.abs(distX) >= threshold && Math.abs(distY) <= restraint){ // 2nd condition for horizontal swipe met
+		swipedir = (distX < 0)? 'left' : 'right' // if dist traveled is negative, it indicates left swipe
+		}
+		else if (Math.abs(distY) >= threshold && Math.abs(distX) <= restraint){ // 2nd condition for vertical swipe met
+		swipedir = (distY < 0)? 'up' : 'down' // if dist traveled is negative, it indicates up swipe
+		}
+		}
+		handleswipe(swipedir)
+		e.preventDefault()
+	}, false)
+} 
+
+
+function CheckTouchable()
+{
+	return 'ontouchstart' in window || navigator.msMaxTouchPoints; 
+}
+
+function AddTouchSwipe(func)
+{ 
+	var el = document.getElementById('game');
+	swipedetect(el, func)
+}
+
+
+function addGrowl()
+{
+	$("head").append("<style>"+
+						" #growl { position: absolute; bottom: 10px; right: 20px; overflow: hidden; z-index:    2000; } "+
+						"#growl .msg { z-index:    3000; border: 1px solid #171717; color: #E4E4E4; text-shadow: 0 -1px 1px #0A131A; font-weight: bold; min-width: 200px; min-height: 30px; padding: 10px; font-size: 15px; margin-bottom: 10px; background-color: #0000ff; background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 255, 0.3)), color-stop(0.8, rgba(255, 255, 255, 0))), rgba(0, 0, 64, 0.8); box-shadow: inset 0 1px 1px #8E8E8E; -webkit-box-shadow: inset 0 1px 1px #8E8E8E; -moz-box-shadow: inset 0 1px 1px #8E8E8E; border-radius: 7px; -webkit-border-radius: 7px; -moz-border-radius: 7px; }"+
+						" #growl .alert { background-color: #ff0000; background: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 0, 0, 0.3)), color-stop(0.8, rgba(255, 255, 255, 0))), rgba(64, 0, 0, 0.8); }"+
+						"</style>"); 
+
+    var container = $("<div />");
+    container.attr({id: "growl"});
+        $(function(){
+        $("body").append(container);
+    });
+
+    $.growl = function(body, warning)
+    {
+        // Create the Growl div
+        var msg = $("<div />").addClass("msg");
+
+        console.log(body)
+        if(warning)
+                msg.addClass("$.growl")
+        msg.html(body);
+
+        // Append it to the list
+        container.append(msg);
+
+        // Add a drop effect, and then remove
+        msg.show("drop", { direction: "down",
+                            distance: 50 }, 300).
+                            delay(1000).
+                            fadeOut(300, function()
+                            {
+                            $(this).remove();
+                            });
+
+        return msg;
+    };
+} 
+
+function ajaxReq(url, arg, successFunc, type)
+{
+    if(typeof(arg) == "function" && successFunc == undefined)
+    {
+        successFunc = arg;
+        arg = {}
+    }
+
+    if(!type)
+        type = 'GET';
+
+    return $.ajax({url: url,
+            type: type,
+            data: arg,
+            dataType: 'json',
+            timeout: 1000 * 60,
+            error: function (xhr, ajaxOptions, thrownError)
+            {
+                alert("url : " + url + "\n" + xhr.responseText);
+                alert(thrownError);
+            },
+            success: function(json)
+                        {
+                            console.log("ajax req success");
+                            console.log("url : " + url);
+                            console.log("arg : ");
+                            console.log(arg);
+//                          console.log("successFunc : " + successFunc);
+
+                            if(json)
+                            {
+                                console.log("json : ");
+                                console.log(json);
+
+                                if(json.error || json.failed || (json.result && json.result != 0) )
+                                {
+                                    var message = "";
+
+                                    for(var i in json)
+                                        message += i + " : " + json[i] + "<br>";
+
+                                    $.growl(message);
+                                }
+                            }
+
+                            if(successFunc)
+                                successFunc(json)
+                        }
+        })
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //http://stackoverflow.com/questions/2750028/enable-disable-zoom-on-iphone-safari-with-javascript
@@ -135,8 +284,6 @@ var KeyManager = function()
 		if(keyCode >= 255)
 			return;
 
-		console.log(keyCode);
-			
 		this.keyMap[keyCode] = false;
 	}
 	
@@ -169,6 +316,8 @@ var KeyManager = function()
 
 var MouseManager = function()
 {
+	this.prex = 0;
+	this.prey = 0;
 	this.x = 0;
 	this.y = 0;
 	this.LDown = false;
@@ -289,8 +438,8 @@ function LoadLib()
 	include_css( config["jenginePath"] + "css/renderer.css");
 	
 	//include_js( config["srcPath"] + "resource.js");
-	$(document).bind("touchstart mousedown", mouseDown);
-	$(document).bind("touchmove mousemove", mouseMove);
+	$("#game").bind("touchstart mousedown", mouseDown);
+	$("#game").bind("touchmove mousemove", mouseMove);
 	$(document).bind("touchend mouseup", mouseUp);
 
 	function mouseDown(e)
@@ -298,13 +447,14 @@ function LoadLib()
 		e.preventDefault();
 
 		if(!MouseManager)
-			return false;
+			return;
 
 		var pageX, pageY;
 		if(e.type.indexOf("touch") == 0)
 		{
 			pageX = e.originalEvent.touches[0].pageX;
 			pageY = e.originalEvent.touches[0].pageY;
+			touchDevice = true;
 		}
 		else
 		{
@@ -314,11 +464,17 @@ function LoadLib()
 
 		var offsetX = $("#game").offset().left;
 		var offsetY = $("#game").offset().top;
+		MouseManager.prex = MouseManager.x;
+		MouseManager.prey = MouseManager.y;
 		MouseManager.x = Math.floor((pageX - offsetX) / config["screenScale"]);
 		MouseManager.y = Math.floor((pageY - offsetY) / config["screenScale"]);
+		if(e.type.indexOf("touch") == 0)
+		{
+			MouseManager.prex = MouseManager.x;
+			MouseManager.prey = MouseManager.y;
+		}
 
 		MouseManager.LDown = true;
-		return false;
 	}
 
 	function mouseMove(e)
@@ -326,13 +482,15 @@ function LoadLib()
 		e.preventDefault();
 
 		if(!MouseManager)
-			return false;
+			return;
 
 		var pageX, pageY;
 		if(e.type.indexOf("touch") == 0)
 		{
 			pageX = e.originalEvent.touches[0].pageX;
 			pageY = e.originalEvent.touches[0].pageY;
+			touchDevice = true;
+			MouseManager.LDown = true;
 		}
 		else
 		{
@@ -343,9 +501,7 @@ function LoadLib()
 		var offsetX = $("#game").offset().left;
 		var offsetY = $("#game").offset().top;
 		MouseManager.x = Math.floor((pageX - offsetX) / config["screenScale"]);
-		MouseManager.y = Math.floor((pageY - offsetY) / config["screenScale"]);
-		return false;
-
+		MouseManager.y = Math.floor((pageY - offsetY) / config["screenScale"]); 
 	}
 
 	function mouseUp(e)
@@ -353,10 +509,28 @@ function LoadLib()
 		e.preventDefault();
 
 		if(!MouseManager)
-			return false;
-	
+			return;
 		MouseManager.LDown = false;
-		return false;
+
+//		var pageX, pageY;
+//		if(e.type.indexOf("touch") == 0)
+//		{
+//			pageX = e.originalEvent.touches[0].pageX;
+//			pageY = e.originalEvent.touches[0].pageY;
+//		}
+//		else
+//		{
+//			pageX = e.pageX;
+//			pageY = e.pageY;
+//		}
+//
+//	
+//		MouseManager.LDown = false;
+//
+//		var offsetX = $("#game").offset().left;
+//		var offsetY = $("#game").offset().top;
+//		MouseManager.x = Math.floor((pageX - offsetX) / config["screenScale"]);
+//		MouseManager.y = Math.floor((pageY - offsetY) / config["screenScale"]);
 	}												
 	
 	$(window).keydown(function(e) {
@@ -372,6 +546,7 @@ function LoadLib()
 			KeyManager.KeyUp(e.keyCode);
 	});
 
+
 	waitIncludeComplete( function() 
 	{
 		Console = new Console(config["width"], config["height"]);
@@ -383,6 +558,7 @@ function LoadLib()
 		SceneManager = new SceneManager();
 		RequestManager = new RequestManager();
 		ResLoader = new ResLoader();
+		AddTouchSwipe();
 
 //		for(var idx in imgRes)
 //			ImageManager.Register( imgRes[idx], idx);
@@ -418,13 +594,18 @@ function LoadLib()
 													
 													SceneManager.Update();
 													
+													g_now = new Date();
 													Renderer.Begin();
 														SceneManager.Render();
 													Renderer.End();
 	
+													MouseManager.prex = MouseManager.x;
+													MouseManager.prey = MouseManager.y;
 													MouseManager.prevLDown = MouseManager.LDown;
 													MouseManager.Upped = false;
 													MouseManager.Clicked = false;
+//													if(touchDevice)
+//														MouseManager.LDown = false;
 													
 													KeyManager.EndFrame();
 
@@ -452,6 +633,7 @@ function jengineStart()
 										margin: "-" + (config["height"] * config["screenScale"])/ 2 + "px 0 0 -"  + (config["width"] * config["screenScale"]) / 2+ "px"}	 );
 		}
 		
+		addGrowl();
 		LoadLib();
 	} );
 }

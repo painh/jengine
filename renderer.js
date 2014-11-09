@@ -9,10 +9,12 @@ var Renderer = function(width, height, scale)
 	this.backCanvasElement = $(document.createElement('canvas'));
 	this.backCanvas = this.backCanvasElement.get(0);
 
-	this.frontCanvas = this.canvas.get(0).getContext("2d");
 	this.backCanvas.width = width * scale;
 	this.backCanvas.height = height * scale;
 	this.context = this.backCanvas.getContext('2d');
+	this.context.mozImageSmoothingEnabled = false;
+	this.context.webkitImageSmoothingEnabled = false;
+	this.context.imageSmoothingEnabled = false;
 
 	this.width = width;
 	this.height = height;
@@ -20,6 +22,12 @@ var Renderer = function(width, height, scale)
 	var domCanvas = this.canvas.get(0);
 	domCanvas.width = width * scale;
 	domCanvas.height = height * scale;
+//	this.frontCanvas = this.canvas.get(0).getContext("2d");
+	this.frontCanvas = domCanvas.getContext("2d");
+	this.frontCanvas.mozImageSmoothingEnabled = false;
+	this.frontCanvas.webkitImageSmoothingEnabled = false;
+	this.frontCanvas.imageSmoothingEnabled = false;
+
 
 	this.context.font         = '13pt Arial';
 	this.context.textBaseline = 'top';
@@ -36,8 +44,7 @@ var Renderer = function(width, height, scale)
 	this.SetAlpha = function( a )
 	{
 		this.context.globalAlpha = a;
-	}
-
+	} 
 	
 	this.SetFont = function(font)
 	{
@@ -112,13 +119,13 @@ var Renderer = function(width, height, scale)
 		if(n == undefined)
 			n = 0;
 
-		var px = Math.round(n % (img.width / patternX));
+		var px = Math.floor(n % (img.width / patternX));
 		var py
 
 		if(n < (img.width / patternX))
 			py = 0;
 		else
-			py = Math.round(n / (img.width / patternX))
+			py = Math.floor(n / (img.width / patternX))
 
 		this.context.drawImage( img, px * patternX, py * patternY, patternX, patternY, x, y, patternX, patternY);
 	}
@@ -140,13 +147,13 @@ var Renderer = function(width, height, scale)
 		if(n == undefined)
 			n = 0;
 
-		var px = Math.round(n % (img.width / patternX))
+		var px = Math.floor(n % (img.width / patternX))
 		var py
 
 		if(n < (img.width / patternX))
 			py = 0;
 		else
-			py = Math.round(n / (img.width / patternX))
+			py = Math.floor(n / (img.width / patternX))
 
 		//this.context.drawImage( img, px * patternX, py * patternY, patternX, patternY, -this.width + x , y, patternX, patternY);
 
@@ -209,6 +216,7 @@ var Renderer = function(width, height, scale)
 	this.SetColor = function( color )
 	{
 		this.context.fillStyle = color;
+		this.context.strokeStyle = color;
 	}
 	
 	this.Begin = function()
@@ -217,10 +225,35 @@ var Renderer = function(width, height, scale)
 		this.Rect(0, 0, this.width, this.height);
 		this.context.fillStyle = this.defaultColor;
 	}
-	
+
+	this.drawPixelated = function()
+	{
+		var idata = this.context.getImageData(0, 0, this.width, this.height).data;
+		var zoom = config['screenScale']; 
+
+		for (var x2=0;x2<this.width;++x2)
+		{
+			for (var y2=0;y2<this.height;++y2)
+			{
+				var i=(y2*this.width+x2)*4;
+				var r=idata[i  ];
+				var g=idata[i+1];
+				var b=idata[i+2];
+				var a=idata[i+3];
+
+				this.frontCanvas.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")"; 
+				this.frontCanvas.fillRect(x2*zoom, y2*zoom, zoom, zoom);
+			}
+		}
+
+		console.log('frame done!');
+	}
+
 	this.End = function()
 	{
 		this.fps++;
+
+//		this.drawPixelated();
 		
 		this.frontCanvas.drawImage(this.backCanvas, 0, 0,
 							this.width, this.height, 0, 0, this.backCanvas.width, this.backCanvas.height);
