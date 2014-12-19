@@ -1,33 +1,88 @@
+var g_screenScale = 1;
+var g_scaledWidth = 1;
+var g_scaledHeight = 1;
+var g_backCanvas;
+var g_frontCanvas;
+var g_domCanvas;
+function screenResize()
+{
+	if(config['autoScale'])
+	{
+		var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+		console.log('view', w, h);
+		console.log('view 2', config['width'], config['height']);
+		scaleX = w / config['width'];
+		scaleY = h / config['height'];
+
+		scale = Math.min(scaleX, scaleY); 
+		console.log(scale);
+	}
+	g_screenScale = scale;
+
+	$("#game").width(g_scaledWidth);
+	$("#game").height(g_scaledHeight);
+	g_scaledWidth = config['width'] * scale;
+	g_scaledHeight = config['height'] * scale;
+
+	console.log("----------");
+	console.log(g_backCanvas.width, g_backCanvas.height);
+	console.log(g_domCanvas.width, g_domCanvas.height);
+	console.log("================");
+
+
+	g_backCanvas.width = config['width'];
+	g_backCanvas.height = config['height'];
+	g_domCanvas.width = g_scaledWidth;
+	g_domCanvas.height = g_scaledHeight;
+
+	if( config["gameDivAlign"] == "center"  )
+	{
+		$("#game").css(  { position : "absolute",
+									top : "50%",
+									left : "50%",
+									margin: "-" + (g_scaledHeight)/ 2 + "px 0 0 -"  + (g_scaledWidth) / 2+ "px"}	 );
+	}
+
+	console.log(g_backCanvas);
+	console.log(g_backCanvas.width , g_backCanvas.height ); 
+
+	g_frontCanvas.mozImageSmoothingEnabled = false;
+	g_frontCanvas.webkitImageSmoothingEnabled = false;
+	g_frontCanvas.imageSmoothingEnabled = false;
+
+	g_backCanvas.getContext('2d').mozImageSmoothingEnabled = false;
+	g_backCanvas.getContext('2d').webkitImageSmoothingEnabled = false;
+	g_backCanvas.getContext('2d').imageSmoothingEnabled = false;
+}
 var Renderer = function(width, height, scale)
 {
 	if(scale == undefined)
 		scale = 1.0;
-		
+
+	window.onresize=screenResize;
+	console.log(g_scaledWidth, g_scaledHeight);
+	console.log("----------");
+
 	this.canvas = $("<canvas id='mainCanvas'/>").appendTo("#game");
 	var t = $("<canvas id='backCanvas'/>");
 //	var privateCanvas = $(t).appendTo('<div/>');
 	this.backCanvasElement = $(document.createElement('canvas'));
 	this.backCanvas = this.backCanvasElement.get(0);
+	g_backCanvas = this.backCanvas;
 
-	this.backCanvas.width = width * scale;
-	this.backCanvas.height = height * scale;
 	this.context = this.backCanvas.getContext('2d');
-	this.context.mozImageSmoothingEnabled = false;
-	this.context.webkitImageSmoothingEnabled = false;
-	this.context.imageSmoothingEnabled = false;
 
 	this.width = width;
 	this.height = height;
 	
-	var domCanvas = this.canvas.get(0);
-	domCanvas.width = width * scale;
-	domCanvas.height = height * scale;
+	g_domCanvas = this.canvas.get(0);
 //	this.frontCanvas = this.canvas.get(0).getContext("2d");
-	this.frontCanvas = domCanvas.getContext("2d");
-	this.frontCanvas.mozImageSmoothingEnabled = false;
-	this.frontCanvas.webkitImageSmoothingEnabled = false;
-	this.frontCanvas.imageSmoothingEnabled = false;
+	this.frontCanvas = g_domCanvas.getContext("2d");
+	g_frontCanvas = this.frontCanvas;
 
+	screenResize();
 
 	this.context.font         = '13pt Arial';
 	this.context.textBaseline = 'top';
@@ -41,10 +96,21 @@ var Renderer = function(width, height, scale)
 	this.clearColor = "#000000";
 	this.defaultColor = "#ffffff";
 	
+	this.context.globalCompositeOperation = 'source-over';
 	this.SetAlpha = function( a )
 	{
 		this.context.globalAlpha = a;
 	} 
+
+	this.SetCompositeOperation = function(op)
+	{
+//var compositeTypes = [
+//	  'source-over','source-in','source-out','source-atop',
+//	    'destination-over','destination-in','destination-out','destination-atop',
+//		  'lighter','darker','copy','xor'
+//];
+		this.context.globalCompositeOperation = op;
+	}
 	
 	this.SetFont = function(font)
 	{
@@ -192,9 +258,9 @@ var Renderer = function(width, height, scale)
 	}
 	
 	this.RectStroke = function(x, y, w, h)
-	{
+	{ 
 		this.context.lineWidth = 1;
-		this.context.strokeRect(x,y,w,h);
+		this.context.strokeRect(parseInt(x),parseInt(y),parseInt(w),parseInt(h)); 
 	}
 	
 	this.Line = function( x1, y1, x2, y2 )
@@ -224,6 +290,7 @@ var Renderer = function(width, height, scale)
 		this.context.fillStyle = this.clearColor;
 		this.Rect(0, 0, this.width, this.height);
 		this.context.fillStyle = this.defaultColor;
+		this.SetCompositeOperation('source-over');
 	}
 
 	this.drawPixelated = function()
@@ -256,7 +323,7 @@ var Renderer = function(width, height, scale)
 //		this.drawPixelated();
 		
 		this.frontCanvas.drawImage(this.backCanvas, 0, 0,
-							this.width, this.height, 0, 0, this.backCanvas.width, this.backCanvas.height);
+							this.width, this.height, 0, 0, g_scaledWidth, g_scaledHeight);
 		
 		
 		this.Text(0, 0, "FPS : " + this.lastFPS );

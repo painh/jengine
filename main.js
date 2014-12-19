@@ -466,8 +466,8 @@ function LoadLib()
 		var offsetY = $("#game").offset().top;
 		MouseManager.prex = MouseManager.x;
 		MouseManager.prey = MouseManager.y;
-		MouseManager.x = Math.floor((pageX - offsetX) / config["screenScale"]);
-		MouseManager.y = Math.floor((pageY - offsetY) / config["screenScale"]);
+		MouseManager.x = Math.floor((pageX - offsetX) / g_screenScale);
+		MouseManager.y = Math.floor((pageY - offsetY) / g_screenScale);
 		if(e.type.indexOf("touch") == 0)
 		{
 			MouseManager.prex = MouseManager.x;
@@ -500,8 +500,8 @@ function LoadLib()
 
 		var offsetX = $("#game").offset().left;
 		var offsetY = $("#game").offset().top;
-		MouseManager.x = Math.floor((pageX - offsetX) / config["screenScale"]);
-		MouseManager.y = Math.floor((pageY - offsetY) / config["screenScale"]); 
+		MouseManager.x = Math.floor((pageX - offsetX) / g_screenScale);
+		MouseManager.y = Math.floor((pageY - offsetY) / g_screenScale); 
 	}
 
 	function mouseUp(e)
@@ -549,9 +549,9 @@ function LoadLib()
 
 	waitIncludeComplete( function() 
 	{
-		Console = new Console(config["width"], config["height"]);
 		KeyManager = new KeyManager();
 		Renderer = new Renderer(config["width"], config["height"], config['screenScale']);
+		Console = new Console(g_scaledWidth, g_scaledHeight);
 		MouseManager = new MouseManager();
 		ImageManager = new ImageManager();
 		SoundManager = new SoundManager();
@@ -623,16 +623,7 @@ function jengineStart()
 	//include_js("config.js");
 	AllowZoom(false)
 	
-	waitIncludeComplete(  function() {
-		
-		if( config["gameDivAlign"] == "center"  )
-		{
-			$("#game").css(  { position : "absolute",
-										top : "50%",
-										left : "50%",
-										margin: "-" + (config["height"] * config["screenScale"])/ 2 + "px 0 0 -"  + (config["width"] * config["screenScale"]) / 2+ "px"}	 );
-		}
-		
+	waitIncludeComplete(  function() { 
 		addGrowl();
 		LoadLib();
 	} );
