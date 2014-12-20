@@ -4,6 +4,7 @@ var g_scaledHeight = 1;
 var g_backCanvas;
 var g_frontCanvas;
 var g_domCanvas;
+var g_scale = 1;
 function screenResize()
 {
 	if(config['autoScale'])
@@ -16,15 +17,15 @@ function screenResize()
 		scaleX = w / config['width'];
 		scaleY = h / config['height'];
 
-		scale = Math.min(scaleX, scaleY); 
-		console.log(scale);
+		g_scale = Math.min(scaleX, scaleY); 
 	}
-	g_screenScale = scale;
+
+	g_screenScale = g_scale;
 
 	$("#game").width(g_scaledWidth);
 	$("#game").height(g_scaledHeight);
-	g_scaledWidth = config['width'] * scale;
-	g_scaledHeight = config['height'] * scale;
+	g_scaledWidth = config['width'] * g_scale;
+	g_scaledHeight = config['height'] * g_scale;
 
 	console.log("----------");
 	console.log(g_backCanvas.width, g_backCanvas.height);
@@ -59,7 +60,9 @@ function screenResize()
 var Renderer = function(width, height, scale)
 {
 	if(scale == undefined)
-		scale = 1.0;
+		g_scale = 1.0;
+	else
+		g_scale = scale;
 
 	window.onresize=screenResize;
 	console.log(g_scaledWidth, g_scaledHeight);
