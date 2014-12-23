@@ -1,3 +1,118 @@
+function CSVToObj( csvString )
+{
+	var lines = csvString.split('\n');
+	var list = undefined;
+	var col = undefined;
+
+	for( var i = 0; i < lines.length; i++)
+	{
+		if(lines[i][0] == "#")
+			continue;
+
+		var tokens = lines[i].split(',');
+
+		if(tokens.length == 0)
+			continue;
+
+		if(list == undefined)
+		{
+			list = new Array();
+			col = tokens;
+			continue;
+		}
+
+		if(tokens.length != col.length)
+		{
+			trace("tokens != col " + lines[i]);
+			continue;
+		}
+
+		var entry = new Object();
+		for(var j = 0; j < col.length; ++j)
+			entry[col[j]] = tokens[j];
+	
+		list.push(entry);
+	}
+/*
+	for( var i = 0; i < list.length; i++)
+	{
+		for( var j in list[i] )
+			trace( "[" + i + "]" + j + " : "  + list[i][j] );
+	}
+*/
+	return list;	
+}
+
+var ImageManager = function()
+{
+	this.m_imageArray = new Array();
+
+	this.ImageOnLoad = function( image )
+	{
+		var img = this.Get(image.imageName);
+		if(img == null)
+			return;
+
+		img.isLoaded = true;
+		trace(image.src + " load complete");
+	}
+
+	this.Register = function( URL, imageName, forceLoad )
+	{
+//		trace(URL);
+//		trace(imageName);
+		for( var idx in this.m_imageArray )
+		{
+			if(this.m_imageArray[idx].imageName == imageName &&
+				this.m_imageArray[idx].src == URL)
+			{
+				trace("already registered image" + imageName );
+				return this.m_imageArray[idx];
+			}
+		}
+		
+		var newImage = new Image();
+		this.m_imageArray.push( newImage );
+
+		newImage.onload = function() { ImageManager.ImageOnLoad(this) } ;
+		newImage.onerror = function() { trace("error : load " + URL + " failed") } ;
+		newImage.imageName = imageName;
+		newImage.isLoaded = false;
+		if(forceLoad)
+			newImage.src = URL + "?t="+(new Date()).getTime();
+		else
+			newImage.src = URL;
+
+	//	trace(newImage.imageName);
+		return newImage;
+	}
+
+	this.Get = function( imageName )
+	{
+		for( var i = 0; i < this.m_imageArray.length; ++i)
+		{
+			if( this.m_imageArray[i].imageName == imageName )
+			{
+				return this.m_imageArray[i];
+			}
+		}
+
+		trace("not registered imageName " + imageName);
+		return null;
+	}
+
+	this.IsAllLoadComplete = function()
+	{
+		for( var idx in this.m_imageArray )
+		{
+			if(!this.m_imageArray[idx].isLoaded)
+				return false;
+		}
+	
+		return true;
+	}
+};
+
 var Console;
 var KeyManager;
 var Renderer;
@@ -187,16 +302,14 @@ function AllowZoom(flag) {
 function randomRange(n1, n2)
 {
 	return Math.floor( (Math.random() * (parseInt(n2) - parseInt(n1) + 1)) + parseInt(n1) );
-}
+};
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 function removeFromList(list, obj)
 {
 	var idx = list.indexOf(obj);
 	list.splice(idx, 1); 
-}
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,12 +346,12 @@ var Console = function( width, height)
 	this.maxLineOnScreen = height / this.fontHeight;
 	
 	this.consoleDiv.hide();
-}
+};
 
 function trace( msg )
 {
 	Console.Trace(msg);
-}
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var KeyManager = function()
@@ -311,7 +424,7 @@ var KeyManager = function()
 		for( var i = 0; i < 255; ++i)
 			this.KeyMapPrevFrame[i] = this.keyMap[i];
 	}
-}
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var MouseManager = function()
@@ -324,7 +437,7 @@ var MouseManager = function()
 	this.prevLDown = false;
 	this.Clicked = false;
 	this.Upped = false;
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -344,7 +457,7 @@ function IsAllIncludeComplete( includeID )
 			return false;
 	}
 	return true;
-}
+};
 
 function include_js( name )
 {
@@ -359,7 +472,7 @@ function include_js( name )
 	console.log("include_js : " + name );
 	checkInclude[name].script.attr( 'onLoad', function() { checkInclude[name].isLoaded = true;  console.log("include_js : " + name + " included!"); } );
 	lastIncluded = checkInclude[name];
-}
+};
 
 function include_css( name )
 {
@@ -368,7 +481,7 @@ function include_css( name )
 	checkInclude[name].waitIncludeID = waitIncludeID;
 	checkInclude[name].script = $("<link rel='stylesheet' type='text/css' href ='" +  name + "'/>").appendTo('head');
 	checkInclude[name].script.attr( 'onLoad', function() { checkInclude[name].isLoaded = true; console.log("include_css : " + name + " included!");} );
-}
+};
 
 function waitIncludeComplete( completeFunc )
 {
@@ -394,7 +507,7 @@ function waitIncludeComplete( completeFunc )
 		completeFunc();
 	}, defaultTerm );
 
-}
+};
 
 function getArgument()
 {
@@ -418,21 +531,21 @@ function getArgument()
 
 //	for(var idx in g_argumentList)
 //		console.log(idx);
-}
+};
 
 function LoadLib()
 {
 //	for(var idx in config)
 //		console.log( idx + " : " + config[idx] );
 		
-	include_js( config["jenginePath"] + "renderer.js");
-	include_js( config["jenginePath"] + "imagemanager.js");
-	include_js( config["jenginePath"] + "soundmanager.js");
-	include_js( config["jenginePath"] + "scenemanager.js" );
-	include_js( config["jenginePath"] + "requestmanager.js" );
-	include_js( config["jenginePath"] + "resloader.js" );
-	include_js( config["jenginePath"] + "csv2obj.js" );
-
+//	include_js( config["jenginePath"] + "renderer.js");
+//	include_js( config["jenginePath"] + "imagemanager.js");
+//	include_js( config["jenginePath"] + "soundmanager.js");
+//	include_js( config["jenginePath"] + "scenemanager.js" );
+//	include_js( config["jenginePath"] + "requestmanager.js" );
+//	include_js( config["jenginePath"] + "resloader.js" );
+//	include_js( config["jenginePath"] + "csv2obj.js" );
+//
 	
 	include_css( config["jenginePath"] + "css/console.css");
 	include_css( config["jenginePath"] + "css/renderer.css");
@@ -613,9 +726,8 @@ function LoadLib()
 												}, interval);			
 												
 											}, config["resLoadWaitTerm"]);
-	} );
-
-}
+	} ); 
+};
 
 function jengineStart()
 {
@@ -627,4 +739,601 @@ function jengineStart()
 		addGrowl();
 		LoadLib();
 	} );
-}
+};
+
+var g_screenScale = 1;
+var g_scaledWidth = 1;
+var g_scaledHeight = 1;
+var g_backCanvas;
+var g_frontCanvas;
+var g_domCanvas;
+var g_scale = 1;
+function screenResize()
+{
+	if(config['autoScale'])
+	{
+		var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+		console.log('view', w, h);
+		console.log('view 2', config['width'], config['height']);
+		scaleX = w / config['width'];
+		scaleY = h / config['height'];
+
+		g_scale = Math.min(scaleX, scaleY); 
+	}
+
+	g_screenScale = g_scale;
+
+	$("#game").width(g_scaledWidth);
+	$("#game").height(g_scaledHeight);
+	g_scaledWidth = config['width'] * g_scale;
+	g_scaledHeight = config['height'] * g_scale;
+
+	console.log("----------");
+	console.log(g_backCanvas.width, g_backCanvas.height);
+	console.log(g_domCanvas.width, g_domCanvas.height);
+	console.log("================");
+
+
+	g_backCanvas.width = config['width'];
+	g_backCanvas.height = config['height'];
+	g_domCanvas.width = g_scaledWidth;
+	g_domCanvas.height = g_scaledHeight;
+
+	if( config["gameDivAlign"] == "center"  )
+	{
+		$("#game").css(  { position : "absolute",
+									top : "50%",
+									left : "50%",
+									margin: "-" + (g_scaledHeight)/ 2 + "px 0 0 -"  + (g_scaledWidth) / 2+ "px"}	 );
+	}
+
+	console.log(g_backCanvas);
+	console.log(g_backCanvas.width , g_backCanvas.height ); 
+
+	g_frontCanvas.mozImageSmoothingEnabled = false;
+	g_frontCanvas.webkitImageSmoothingEnabled = false;
+	g_frontCanvas.imageSmoothingEnabled = false;
+
+	g_backCanvas.getContext('2d').mozImageSmoothingEnabled = false;
+	g_backCanvas.getContext('2d').webkitImageSmoothingEnabled = false;
+	g_backCanvas.getContext('2d').imageSmoothingEnabled = false;
+};
+
+var Renderer = function(width, height, scale)
+{
+	if(scale == undefined)
+		g_scale = 1.0;
+	else
+		g_scale = scale;
+
+	window.onresize=screenResize;
+	console.log(g_scaledWidth, g_scaledHeight);
+	console.log("----------");
+
+	this.canvas = $("<canvas id='mainCanvas'/>").appendTo("#game");
+	var t = $("<canvas id='backCanvas'/>");
+//	var privateCanvas = $(t).appendTo('<div/>');
+	this.backCanvasElement = $(document.createElement('canvas'));
+	this.backCanvas = this.backCanvasElement.get(0);
+	g_backCanvas = this.backCanvas;
+
+	this.context = this.backCanvas.getContext('2d');
+
+	this.width = width;
+	this.height = height;
+	
+	g_domCanvas = this.canvas.get(0);
+//	this.frontCanvas = this.canvas.get(0).getContext("2d");
+	this.frontCanvas = g_domCanvas.getContext("2d");
+	g_frontCanvas = this.frontCanvas;
+
+	screenResize();
+
+	this.context.font         = '13pt Arial';
+	this.context.textBaseline = 'top';
+
+	this.fontSize = parseInt(this.canvas.css('font-size'));
+	
+	this.lastTime = new Date().getTime();
+	this.fps = 0;
+	this.lastFPS = 0;
+	this.currentTime = this.lastTime;
+	this.clearColor = "#000000";
+	this.defaultColor = "#ffffff";
+	
+	this.context.globalCompositeOperation = 'source-over';
+	this.SetAlpha = function( a )
+	{
+		this.context.globalAlpha = a;
+	} 
+
+	this.SetCompositeOperation = function(op)
+	{
+//var compositeTypes = [
+//	  'source-over','source-in','source-out','source-atop',
+//	    'destination-over','destination-in','destination-out','destination-atop',
+//		  'lighter','darker','copy','xor'
+//];
+		this.context.globalCompositeOperation = op;
+	}
+	
+	this.SetFont = function(font)
+	{
+		this.context.font			= font;
+		this.context.textBaseline	= 'top';
+	}
+	
+	this.Text = function( x, y, msg )
+	{
+		this.context.fillText(msg, x, y);
+	}
+
+	this.GetTextWidth = function(text)
+	{
+		var metrics = this.context.measureText(text);
+		return metrics.width;
+	}
+	
+	this.GetFontSize = function()
+	{
+		return parseInt(this.canvas.css('font-size'));
+	}
+
+	this.WrapText = function (x, y, maxWidth, lineHeight, text)
+	{
+		var words = text.split(" ");
+		var line = "";
+	 
+		for (var n = 0; n < words.length; n++) 
+		{
+			var testLine = line + words[n] + " ";
+			var metrics = this.context.measureText(testLine);
+			var testWidth = metrics.width;
+			if (testWidth > maxWidth) {
+				this.context.fillText(line, x, y);
+				line = words[n] + " ";
+				y += lineHeight;
+			}
+			else {
+				line = testLine;
+			}
+		}
+		this.context.fillText(line, x, y);
+	}
+
+	this.ImgBlt = function( x, y, img, srcX, srcY, srcWidth, srcHeight, renderWidth, renderHeight )
+	{
+		if(!img.isLoaded)
+			return
+
+		if(renderWidth == undefined)
+			renderWidth = srcWidth
+
+		if(renderHeight == undefined)
+			renderHeight = srcHeight
+
+		this.context.drawImage( img, srcX, srcY, srcWidth, srcHeight, x, y, renderWidth, renderHeight);
+	}
+
+ 	
+	this.Img = function( x, y, img, patternX, patternY, n )
+	{
+		if(!img.isLoaded)
+			return;
+
+		if(patternX == undefined)
+			patternX = img.width;
+
+		if(patternY == undefined)
+			patternY = img.height;
+
+		if(n == undefined)
+			n = 0;
+
+		var px = Math.floor(n % (img.width / patternX));
+		var py
+
+		if(n < (img.width / patternX))
+			py = 0;
+		else
+			py = Math.floor(n / (img.width / patternX))
+
+		this.context.drawImage( img, px * patternX, py * patternY, patternX, patternY, x, y, patternX, patternY);
+	}
+
+ 	this.ImgFlipH = function( x, y, img, patternX, patternY, n )
+ 	{
+		if(!img.isLoaded)
+			return;
+
+		this.context.save();
+		this.context.scale(-1, 1)
+
+		if(patternX == undefined)
+			patternX = img.width;
+
+		if(patternY == undefined)
+			patternY = img.height;
+
+		if(n == undefined)
+			n = 0;
+
+		var px = Math.floor(n % (img.width / patternX))
+		var py
+
+		if(n < (img.width / patternX))
+			py = 0;
+		else
+			py = Math.floor(n / (img.width / patternX))
+
+		//this.context.drawImage( img, px * patternX, py * patternY, patternX, patternY, -this.width + x , y, patternX, patternY);
+
+		this.context.drawImage( img, px * patternX, py * patternY, patternX, patternY, -x - patternX , y, patternX, patternY)
+
+		this.context.restore()
+ 	}	
+	
+
+	this.RoundRect = function(x, y, width, height, radius, fill, stroke) 
+	{
+//http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+		if (typeof stroke == "undefined" ) stroke = false; 
+		if (typeof radius === "undefined") radius = 5;
+		if (typeof fill === "undefined") fill = 5;
+
+		this.context.beginPath();
+		this.context.moveTo(x + radius, y);
+		this.context.lineTo(x + width - radius, y);
+		this.context.quadraticCurveTo(x + width, y, x + width, y + radius);
+		this.context.lineTo(x + width, y + height - radius);
+		this.context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+		this.context.lineTo(x + radius, y + height);
+		this.context.quadraticCurveTo(x, y + height, x, y + height - radius);
+		this.context.lineTo(x, y + radius);
+		this.context.quadraticCurveTo(x, y, x + radius, y);
+		this.context.closePath();
+
+		if (stroke)  this.context.stroke();
+		if (fill) this.context.fill();
+	}
+
+	this.Rect = function(x, y, w, h)
+	{
+		this.context.fillRect(x,y,w,h);
+	}
+	
+	this.RectStroke = function(x, y, w, h)
+	{ 
+		this.context.lineWidth = 1;
+		this.context.strokeRect(parseInt(x),parseInt(y),parseInt(w),parseInt(h)); 
+	}
+	
+	this.Line = function( x1, y1, x2, y2 )
+	{
+		this.context.beginPath();	
+		this.context.strokeStyle = this.context.fillStyle;
+		this.context.moveTo( x1, y1 );
+		this.context.lineTo( x2, y2 );		
+		this.context.stroke();		
+	}
+
+	this.Circle = function(cx, cy, r)
+	{
+		this.context.beginPath();
+		this.context.arc(cx, cy, r, 0, Math.PI*2, true); 
+		this.context.closePath();
+		this.context.fill();
+	}
+	this.SetColor = function( color )
+	{
+		this.context.fillStyle = color;
+		this.context.strokeStyle = color;
+	}
+	
+	this.Begin = function()
+	{
+		this.context.fillStyle = this.clearColor;
+		this.Rect(0, 0, this.width, this.height);
+		this.context.fillStyle = this.defaultColor;
+		this.SetCompositeOperation('source-over');
+	}
+
+	this.drawPixelated = function()
+	{
+		var idata = this.context.getImageData(0, 0, this.width, this.height).data;
+		var zoom = config['screenScale']; 
+
+		for (var x2=0;x2<this.width;++x2)
+		{
+			for (var y2=0;y2<this.height;++y2)
+			{
+				var i=(y2*this.width+x2)*4;
+				var r=idata[i  ];
+				var g=idata[i+1];
+				var b=idata[i+2];
+				var a=idata[i+3];
+
+				this.frontCanvas.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")"; 
+				this.frontCanvas.fillRect(x2*zoom, y2*zoom, zoom, zoom);
+			}
+		}
+
+		console.log('frame done!');
+	}
+
+	this.End = function()
+	{
+		this.fps++;
+
+//		this.drawPixelated();
+		
+		this.frontCanvas.drawImage(this.backCanvas, 0, 0,
+							this.width, this.height, 0, 0, g_scaledWidth, g_scaledHeight);
+		
+		
+		this.Text(0, 0, "FPS : " + this.lastFPS );
+		
+		var curDate = new Date();
+		this.currentTime = curDate.getTime();
+
+		if( this.currentTime - this.lastTime > 1000)
+		{
+			this.lastFPS = this.fps;
+			this.fps = 0;
+			this.lastTime = this.currentTime;
+		}
+		
+		time = null;
+	}
+};
+
+var RequestManager = function()
+{
+	//this.m_soundArray = new Array();
+	
+	this.Get = function ( _url, _data, _success, _error  )
+	{
+		$.ajax(
+					{
+						url: _url,
+						type: 'GET',
+						dataType: 'json',
+						data : _data,
+						timeout: 3000,
+						error: _error,
+						success: function(json) 
+						{
+							trace( JSON.stringify(json) );
+							_success(json); 
+						}
+					}
+				);
+	}
+	
+	this.Post = function ( _url, _data, _success, _error  )
+	{
+		$.ajax(
+					{
+						url: _url,
+						type: 'POST',
+						dataType: 'json',
+						data : _data,
+						timeout: 3000,
+						error: _error,
+						success: function(json) 
+						{
+							trace( JSON.stringify(json) );
+
+//							trace(json['msg']);
+							_success(json); 
+						}
+					}
+				);
+	}	
+};
+
+var ResLoader = function()
+{
+	this.list = new Array();
+
+	this.Init = function(onLoadComplete)
+	{
+//		this.onLoad = onLoad;
+		this.onLoadComplete = onLoadComplete;
+	}
+
+	this.getEntry = function( path )
+	{
+		for(var i = 0; i < this.list.length; ++i)
+			if(this.list[i].path == path)
+				return this.list[i];
+
+		return null;
+	}
+
+	this.GetLoadedCount = function()
+	{
+		var cnt = 0;
+		for(var i = 0; i < this.list.length; ++i)
+			if(this.list[i].isLoaded)
+				++cnt;
+
+		return cnt;
+	}
+
+	this.AddRes = function( path, onLoad )
+	{
+		if(this.getEntry(path) != null)
+		{
+			trace("warn - already registered path " + path);
+			return this.list[i];
+		}
+		var entry = new Object;
+		entry.path = path;
+		entry.isLoaded = false;
+
+		this.list.push(entry);
+		var resLoader = this;
+
+		$.get( path, function(data) {
+				onLoad(data);
+//				trace(outValue);
+
+				entry.isLoaded = true;
+				trace("load complete " + entry.path + "( " + resLoader.GetLoadedCount() + " / " +  resLoader.list.length + " )");
+
+				if(resLoader.GetLoadedCount() == resLoader.list.length)
+					resLoader.onLoadComplete();
+//				eval("var map1 = " + data);
+				});
+	}
+};
+
+var SceneManager = function()
+{
+	this.m_sceneList = new Array;
+	this.m_curScene = null;
+	this.m_nextScene = null;
+	this.m_prevScene = null;
+	
+	this.Add = function ( scene )
+	{
+		if( this.m_sceneList.length == 0)
+		{
+			this.m_curScene = scene;
+			this.m_curScene.Start();
+		}
+			
+		this.m_sceneList.push(scene);
+	}
+	
+	this.SetNext = function( scene )
+	{
+		// TODO list에서 검사할것.
+		this.m_nextScene = scene;
+	}
+	
+	this.GetPrev = function()
+	{
+		return this.m_prevScene;
+	}
+	
+	this.Update = function( )
+	{
+		if(this.m_curScene == undefined)
+			return;
+			
+		this.m_curScene.Update();
+		
+		if( this.m_nextScene != null )
+		{
+			trace("scene changed");
+			this.m_curScene.End();
+			
+			this.m_prevScene = this.m_curScene;
+			this.m_curScene = this.m_nextScene;
+			this.m_nextScene = null;
+			
+			this.m_curScene.Start();
+		}
+	}
+	
+	this.Render = function()
+	{
+		if(this.m_curScene == undefined)
+			return;
+	
+		this.m_curScene.Render();
+	}
+};
+
+var SoundManager = function()
+{
+	this.m_soundArray = new Array();
+
+	this.Play = function( soundName )
+	{
+		var snd = this.Get(soundName);
+
+		if(snd == null)
+			return;
+		snd.currentTime = 0;
+		snd.play();
+	}
+
+	this.SoundOnLoad = function( sound )
+	{
+		sound.removeEventListener('load', SoundManager.SoundOnLoad, false);
+		sound.removeEventListener('canplaythrough', SoundManager.SoundOnLoad, false);	
+
+		var snd = this.Get(sound.soundName);
+
+		if(snd == null)
+			return;
+
+		snd.isLoaded = true;
+		trace(snd.src + " load complete");
+	}
+
+	this.Register = function( URL, soundName )
+	{
+		for( var idx in this.m_soundArray )
+		{
+			if(this.m_soundArray[idx].src == soundName)
+			{
+				trace("already registered sound " + soundName );
+				return;
+			}
+		}
+
+		var newSound = new Audio(URL);
+
+		newSound.onerror = function() { trace("error : load " + URL + " failed") } ;
+		this.m_soundArray.push( newSound );
+		newSound.soundName = soundName;
+		newSound.isLoaded = false;
+		newSound.src = URL;
+
+		newSound.play();
+		if(newSound.readyState !== 4)
+		{
+		    newSound.addEventListener('canplaythrough', function() { SoundManager.SoundOnLoad(this) }, false);
+		    newSound.addEventListener('load', function() { SoundManager.SoundOnLoad(this) }, false);
+			setTimeout(function(){ newSound.pause(); }, 1); 
+		}
+		else
+		{
+			//video is ready
+		}
+		//newSound.load();
+	}
+
+	this.Get = function( soundName )
+	{
+		for( var i = 0; i < this.m_soundArray.length; ++i)
+		{
+			if( this.m_soundArray[i].soundName == soundName )
+			{
+				return this.m_soundArray[i];
+			}
+		}
+
+		trace("not registered soundName " + soundName);
+		return null;
+	}
+
+	this.IsAllLoadComplete = function()
+	{
+		for( var idx in this.m_soundArray )
+		{
+	//		trace(this.m_soundArray[idx].isLoaded);
+
+			if(!this.m_soundArray[idx].isLoaded)
+				return false;
+		}
+	
+		return true;
+	}
+};
