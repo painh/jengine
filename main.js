@@ -1,3 +1,9 @@
+function sleep(n)
+{
+	var endtime= new Date().getTime() + n;
+	while (new Date().getTime() < endtime) ;
+}
+
 function CSVToObj( csvString )
 {
 	var lines = csvString.split('\n');
@@ -499,7 +505,7 @@ function waitIncludeComplete( completeFunc )
 			return;
 			
 		clearInterval(timer);
-		console.log("all include end!");
+//		console.log("all include end!");
 //		console.log("---------------------------");
 //		for(var i in checkInclude)
 //			console.log(checkInclude[i] + " , "+ checkInclude[i].isLoaded +" , "+i);
@@ -692,6 +698,7 @@ function LoadLib()
 												startGame(); 
 		
 												var interval = 1000 / config["fps"];
+												var frameSkipTimeSum = 0;
 												
 												var timer = setInterval( function()
 												{
@@ -704,13 +711,25 @@ function LoadLib()
 
 													if(MouseManager.prevLDown == true && MouseManager.LDown == false )
 														MouseManager.Upped = true;
-													
+
+													g_now = new Date(); 
 													SceneManager.Update();
 													
-													g_now = new Date();
-													Renderer.Begin();
-														SceneManager.Render();
-													Renderer.End();
+													if(frameSkipTimeSum >= 0)
+													{
+														var renderStart = new Date();
+														Renderer.Begin();
+															SceneManager.Render();
+														Renderer.End();
+														var diff = new Date().getTime() - renderStart.getTime();
+														frameSkipTimeSum = interval - diff;
+//														console.log(frameSkipTimeSum, diff);
+													}
+													else
+													{
+														frameSkipTimeSum += interval;
+													}
+
 	
 													MouseManager.prex = MouseManager.x;
 													MouseManager.prey = MouseManager.y;
@@ -755,8 +774,8 @@ function screenResize()
 		var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 		var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
-		console.log('view', w, h);
-		console.log('view 2', config['width'], config['height']);
+//		console.log('view', w, h);
+//		console.log('view 2', config['width'], config['height']);
 		scaleX = w / config['width'];
 		scaleY = h / config['height'];
 
@@ -770,11 +789,11 @@ function screenResize()
 	g_scaledWidth = config['width'] * g_scale;
 	g_scaledHeight = config['height'] * g_scale;
 
-	console.log("----------");
-	console.log(g_backCanvas.width, g_backCanvas.height);
-	console.log(g_domCanvas.width, g_domCanvas.height);
-	console.log("================");
-
+//	console.log("----------");
+//	console.log(g_backCanvas.width, g_backCanvas.height);
+//	console.log(g_domCanvas.width, g_domCanvas.height);
+//	console.log("================");
+//
 
 	g_backCanvas.width = config['width'];
 	g_backCanvas.height = config['height'];
@@ -789,8 +808,8 @@ function screenResize()
 									margin: "-" + (g_scaledHeight)/ 2 + "px 0 0 -"  + (g_scaledWidth) / 2+ "px"}	 );
 	}
 
-	console.log(g_backCanvas);
-	console.log(g_backCanvas.width , g_backCanvas.height ); 
+//	console.log(g_backCanvas);
+//	console.log(g_backCanvas.width , g_backCanvas.height ); 
 
 	g_frontCanvas.mozImageSmoothingEnabled = false;
 	g_frontCanvas.webkitImageSmoothingEnabled = false;
@@ -809,8 +828,8 @@ var Renderer = function(width, height, scale)
 		g_scale = scale;
 
 	window.onresize=screenResize;
-	console.log(g_scaledWidth, g_scaledHeight);
-	console.log("----------");
+//	console.log(g_scaledWidth, g_scaledHeight);
+//	console.log("----------");
 
 	this.canvas = $("<canvas id='mainCanvas'/>").appendTo("#game");
 	var t = $("<canvas id='backCanvas'/>");
