@@ -54,7 +54,7 @@ var ImageManager = function()
 			return;
 
 		img.isLoaded = true;
-		trace(image.src + " load complete");
+		//trace(image.src + " load complete");
 	}
 
 	this.Register = function( URL, imageName, forceLoad )
