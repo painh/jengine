@@ -553,8 +553,8 @@ function LoadLib()
 //	include_js( config["jenginePath"] + "csv2obj.js" );
 //
 	
-	include_css( config["jenginePath"] + "css/console.css");
-	include_css( config["jenginePath"] + "css/renderer.css");
+//	include_css( config["jenginePath"] + "css/console.css");
+//	include_css( config["jenginePath"] + "css/renderer.css");
 	
 	//include_js( config["srcPath"] + "resource.js");
 	$("#game").bind("touchstart mousedown", mouseDown);
@@ -1020,13 +1020,18 @@ var Renderer = function(width, height, scale)
 
 	this.Rect = function(x, y, w, h)
 	{
-		this.context.fillRect(x,y,w,h);
+		this.context.translate(0.5,0.5);
+		this.context.lineWidth = 1;
+		this.context.fillRect(parseInt(x) + 0.5,parseInt(y) + 0.5,parseInt(w), parseInt(h));
+		this.context.translate(-0.5, -0.5);
 	}
 	
 	this.RectStroke = function(x, y, w, h)
 	{ 
+//		this.context.translate(0.5,0.5);
 		this.context.lineWidth = 1;
-		this.context.strokeRect(parseInt(x),parseInt(y),parseInt(w),parseInt(h)); 
+		this.context.strokeRect(parseInt(x) + 0.5,parseInt(y) + 0.5,parseInt(w),parseInt(h)); 
+//		this.context.translate(-0.5, -0.5);
 	}
 	
 	this.Line = function( x1, y1, x2, y2 )
@@ -1087,12 +1092,23 @@ var Renderer = function(width, height, scale)
 		this.fps++;
 
 //		this.drawPixelated();
+		if(config['showFPS'])
+		{
+			this.SetColor("#fff");
+			this.SetFont("13pt Arial");
+			var fpsString = "fps : " + this.lastFPS ;
+			var width = this.GetTextWidth(fpsString);
+			this.SetAlpha(1);
+			this.SetColor("#ffffff");
+			this.Rect(0, 0, width, 16);
+			this.SetColor("#000");
+			this.Text(0, 0, fpsString);
+		}
 		
 		this.frontCanvas.drawImage(this.backCanvas, 0, 0,
 							this.width, this.height, 0, 0, g_scaledWidth, g_scaledHeight);
 		
 		
-		this.Text(0, 0, "FPS : " + this.lastFPS );
 		
 		var curDate = new Date();
 		this.currentTime = curDate.getTime();
